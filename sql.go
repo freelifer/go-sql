@@ -160,6 +160,16 @@ func connDb(sqlXml *Sql) (*sql.DB, error) {
 	return engine, err
 }
 
+func createTables(sqlXml *Sql) {
+	for index, value := range sqlXml.Info.DbTables {
+		fmt.Printf("arr[%d]=%d \n", index, value)
+		db.Exec(value.Created)
+	}
+}
+
+func Exec(key string, args ...interface{}) {
+
+}
 func main() {
 	v, err := Parse("sql.config") // For read access.
 	if err != nil {
