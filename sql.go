@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/freelifer/go-sql/parser"
 	_ "github.com/mattn/go-sqlite3"
 )
 
@@ -143,7 +144,7 @@ func Parse(config string) (*Sql, error) {
 }
 
 func connDb(sqlXml *Sql) (*sql.DB, error) {
-	var engine *sql.Db
+	var engine *sql.DB
 	var err error
 	db := sqlXml.Info.Db
 	dbName := sqlXml.Info.Dbname
@@ -153,23 +154,34 @@ func connDb(sqlXml *Sql) (*sql.DB, error) {
 
 	if "mysql" == db {
 		conn := fmt.Sprintf("%s:%s@/%s?charset=utf8", dbUname, dbpassw, dbName)
-		db, err = sql.Open("mysql", conn) //第一个参数为驱动名
+		engine, err = sql.Open("mysql", conn) //第一个参数为驱动名
 	} else {
-		db, err = sql.Open("sqlite3", dbName)
+		engine, err = sql.Open("sqlite3", dbName)
 	}
 	return engine, err
 }
 
 func createTables(sqlXml *Sql) {
-	for index, value := range sqlXml.Info.DbTables {
-		fmt.Printf("arr[%d]=%d \n", index, value)
-		db.Exec(value.Created)
-	}
+	// for index, value := range sqlXml.Info.DbTables {
+	// 	fmt.Printf("arr[%d]=%d \n", index, value)
+	// 	db.Exec(value.Created)
+	// }
 }
 
 func Exec(key string, args ...interface{}) {
 
 }
+
+func Insert(key string, args ...interface{}) {
+
+}
+
+func Update(key string, args ...interface{}) {
+
+}
+
+var sqlStatements map[string]SqlStatement
+
 func main() {
 	v, err := Parse("sql.config") // For read access.
 	if err != nil {
@@ -178,6 +190,44 @@ func main() {
 	}
 	fmt.Println(v)
 
-	Conn(v)
-	connDb(v)
+	// Conn(v)
+	// connDb(v)
+
+	fmt.Println("=------------")
+	dao, e := parser.ParseFile("sql-dao.xml")
+	if e != nil {
+		fmt.Printf("error: %v", e)
+		return
+	}
+	fmt.Println(dao)
+}
+
+type Person struct {
+}
+
+// 数据接口
+type IPersonDao interface {
+	GetPersonName(id int64) (name string, err error)
+	AddPerson(person Person)
+	GetPersonCount() int64
+	ListPersons() *Person
+}
+
+type PersonDaoImpl struct {
+}
+
+func (p *PersonDaoImpl) GetPersonName(id int64) (string, error) {
+	return "", nil
+}
+
+func (p *PersonDaoImpl) AddPerson(person Person) {
+
+}
+
+func (p *PersonDaoImpl) GetPersonCount() int64 {
+	return 1
+}
+
+func (p *PersonDaoImpl) ListPersons() *Person {
+	return nil
 }

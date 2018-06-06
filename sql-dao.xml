@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans version="1">
+    <bean name="database">
+        <!-- 配置连接池属性 -->
+        <property name="db" value="sqlite3" />
+        <property name="dbname" value="data.db" />
+        <property name="dbuname" value="root" />
+        <property name="dbpassw" value="123456" />
+  
+        <!-- 连接池的私有属性 -->  
+        <property name="maxPoolSize" value="30" />
+        <property name="minPoolSize" value="10" />
+    </bean>
+    <bean name="personDao" target="github.com/freelifer/123">
+    </bean>
+</beans>
