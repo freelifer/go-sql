@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/xml"
 	"fmt"
-	"github.com/freelifer/go-sql/parser"
+	"github.com/freelifer/gosql/parser"
 	_ "github.com/mattn/go-sqlite3"
 	"io/ioutil"
 	"os"
@@ -213,9 +213,17 @@ type Engine struct {
 	Factory  *BeanFactory
 }
 
+func (engine *Engine) Table() string {
+	return ""
+}
+
+func (engine *Engine) Count() int64 {
+	return 8
+}
+
 func GetBean(beanName string) interface{} {
-	if v, ok := GoSqlApp.ReflectTypeMap[beanName]; ok {
-		return reflect.New(v).Interface()
+	if v, ok := GoSqlApp.ReflectObjectMap[beanName]; ok {
+		return v
 	} else {
 		fmt.Println("Key Not Found")
 		return nil
@@ -232,8 +240,8 @@ var (
 )
 
 type App struct {
-	Factory        *BeanFactory
-	ReflectTypeMap map[string]reflect.Type
+	Factory          *BeanFactory
+	ReflectObjectMap map[string]interface{}
 }
 
 func init() {
@@ -242,7 +250,32 @@ func init() {
 }
 
 func NewApp() *App {
-	types := make(map[string]reflect.Type)
-	app := &App{ReflectTypeMap: types}
+	dao, e := parser.ParseFile("sql-dao.xml")
+	if e != nil {
+		fmt.Printf("error: %v", e)
+		return nil
+	}
+	mm := parser.ParseBeans(dao)
+	fmt.Println(mm)
+
+	objects := make(map[string]interface{})
+	app := &App{ReflectObjectMap: objects}
 	return app
+}
+
+func AddReflectType(name string, t reflect.Type) {
+	var object interface{}
+	object = reflect.New(t).Interface()
+
+	mtV := reflect.ValueOf(object)
+	CreateTable(mtV.MethodByName("Table").Call(nil)[0].Interface().(string))
+
+	GoSqlApp.ReflectObjectMap[name] = object
+}
+
+// Method ‘Table’ 创建数据库表
+func CreateTable(table string) {
+	if table != "" {
+
+	}
 }
