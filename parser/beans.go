@@ -12,6 +12,7 @@ type Beans struct {
 }
 
 type BeanObject struct {
+	Name     string         `xml:"name,attr"`
 	Property []BeanProperty `xml:"property"`
 }
 
@@ -38,4 +39,19 @@ func ParseFile(path string) (*Beans, error) {
 	}
 
 	return &beans, nil
+}
+
+func ParseBeans(beans *Beans) map[string]map[string]BeanProperty {
+	var data map[string]map[string]BeanProperty
+	data = make(map[string]map[string]BeanProperty)
+	for _, value := range beans.Bean {
+		beanName := value.Name
+		beanProerty := value.Property
+		m1 := make(map[string]BeanProperty)
+		for _, v := range beanProerty {
+			m1[v.Name] = v
+		}
+		data[beanName] = m1
+	}
+	return data
 }

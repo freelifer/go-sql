@@ -1,15 +1,15 @@
-package main
+package gosql
 
 import (
 	"database/sql"
 	"encoding/xml"
 	"fmt"
-	"io/ioutil"
-	"os"
-	"time"
-
 	"github.com/freelifer/go-sql/parser"
 	_ "github.com/mattn/go-sqlite3"
+	"io/ioutil"
+	"os"
+	"reflect"
+	"time"
 )
 
 // root tree
@@ -199,35 +199,50 @@ func main() {
 		fmt.Printf("error: %v", e)
 		return
 	}
-	fmt.Println(dao)
+	mm := parser.ParseBeans(dao)
+
+	fmt.Println(mm)
 }
 
-type Person struct {
+type BeanFactory struct {
+	database map[string]parser.BeanProperty
 }
 
-// 数据接口
-type IPersonDao interface {
-	GetPersonName(id int64) (name string, err error)
-	AddPerson(person Person)
-	GetPersonCount() int64
-	ListPersons() *Person
+type Engine struct {
+	Database map[string]parser.BeanProperty
+	Factory  *BeanFactory
 }
 
-type PersonDaoImpl struct {
+func GetBean(beanName string) interface{} {
+	if v, ok := GoSqlApp.ReflectTypeMap[beanName]; ok {
+		return reflect.New(v).Interface()
+	} else {
+		fmt.Println("Key Not Found")
+		return nil
+	}
 }
 
-func (p *PersonDaoImpl) GetPersonName(id int64) (string, error) {
-	return "", nil
+func GetFactory() *BeanFactory {
+	return GoSqlApp.Factory
 }
 
-func (p *PersonDaoImpl) AddPerson(person Person) {
+var (
+	// GoSqlApp is an application instance
+	GoSqlApp *App
+)
 
+type App struct {
+	Factory        *BeanFactory
+	ReflectTypeMap map[string]reflect.Type
 }
 
-func (p *PersonDaoImpl) GetPersonCount() int64 {
-	return 1
+func init() {
+	// create gosql application
+	GoSqlApp = NewApp()
 }
 
-func (p *PersonDaoImpl) ListPersons() *Person {
-	return nil
+func NewApp() *App {
+	types := make(map[string]reflect.Type)
+	app := &App{ReflectTypeMap: types}
+	return app
 }
