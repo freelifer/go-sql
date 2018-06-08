@@ -240,6 +240,7 @@ var (
 )
 
 type App struct {
+	Engine           *sql.DB
 	Factory          *BeanFactory
 	ReflectObjectMap map[string]interface{}
 }
@@ -250,17 +251,41 @@ func init() {
 }
 
 func NewApp() *App {
-	dao, e := parser.ParseFile("sql-dao.xml")
+	var engine *sql.DB
+	beans, e := parser.ParseFile("sql-dao.xml")
 	if e != nil {
 		fmt.Printf("error: %v", e)
 		return nil
 	}
-	mm := parser.ParseBeans(dao)
-	fmt.Println(mm)
+	beanMap := parser.ParseBeans(beans)
+	if v, ok := beanMap["database"]; ok {
+		engine, _ = ConnDB(v)
+		// error
+	}
 
 	objects := make(map[string]interface{})
-	app := &App{ReflectObjectMap: objects}
+	app := &App{Engine: engine, ReflectObjectMap: objects}
 	return app
+}
+
+func ConnDB(beanPropertyMap map[string]BeanProperty) (*sql.DB, error) {
+	var engine *sql.DB
+	var err error
+
+	db := GetPropertyValue(beanPropertyMap, "db", "sqlite3")
+	dbname := GetPropertyValue(beanPropertyMap, "dbname", "test")
+	dbuname := GetPropertyValue(beanPropertyMap, "dbuname", "root")
+	dbpassw := GetPropertyValue(beanPropertyMap, "dbpassw", "123456")
+
+	fmt.Printf("connDb: %s %s %s %s", db, dbName, dbUname, dbpassw)
+
+	if "mysql" == db {
+		conn := fmt.Sprintf("%s:%s@/%s?charset=utf8", dbUname, dbpassw, dbName)
+		engine, err = sql.Open("mysql", conn) //第一个参数为驱动名
+	} else {
+		engine, err = sql.Open("sqlite3", dbName)
+	}
+	return engine, err
 }
 
 func AddReflectType(name string, t reflect.Type) {

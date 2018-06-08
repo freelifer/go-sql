@@ -55,3 +55,11 @@ func ParseBeans(beans *Beans) map[string]map[string]BeanProperty {
 	}
 	return data
 }
+
+func GetPropertyValue(propertyMap map[string]BeanProperty, name string, defValue string) string {
+	if v, ok := propertyMap[name]; ok {
+		return v.Value
+	} else {
+		return defValue
+	}
+}
