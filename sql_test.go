@@ -1,9 +1,11 @@
-package main
+package gosql
 
 import (
 	"fmt"
 	"github.com/freelifer/gosql"
+	_ "github.com/mattn/go-sqlite3"
 	"reflect"
+	"testing"
 )
 
 func init() {
@@ -23,6 +25,7 @@ type IPersonDao interface {
 	AddPerson(person Person)
 	GetPersonCount() int64
 	ListPersons() *Person
+	AddTest() (int64, error)
 }
 
 type PersonDaoImpl struct {
@@ -30,7 +33,33 @@ type PersonDaoImpl struct {
 }
 
 func (p *PersonDaoImpl) Table() string {
-	return "1111"
+	return `
+	   CREATE TABLE IF NOT EXISTS userinfo(
+	       uid INTEGER PRIMARY KEY AUTOINCREMENT,
+	       username VARCHAR(64) NULL,
+	       department VARCHAR(64) NULL,
+	       created DATE NULL
+	   );
+	   `
+}
+
+func (p *PersonDaoImpl) AddTest() (int64, error) {
+	//插入数据
+	stmt, err := p.GetSql().Prepare("INSERT INTO userinfo(username, department, created) values(?,?,?)")
+	if err != nil {
+		return 0, err
+	}
+
+	res, err := stmt.Exec("astaxie", "研发部门", "2012-12-09")
+	if err != nil {
+		return 0, err
+	}
+
+	id, err := res.LastInsertId()
+	if err != nil {
+		return 0, err
+	}
+	return id, nil
 }
 
 func (p *PersonDaoImpl) GetPersonName(id int64) (string, error) {
@@ -49,12 +78,18 @@ func (p *PersonDaoImpl) ListPersons() *Person {
 	return nil
 }
 
-func main() {
+// go test *.go -v
+func Test_GetWxUser(t *testing.T) {
 	// IPersonDao
 	var personDao IPersonDao
 	personDao = gosql.GetBean("IPersonDao").(*PersonDaoImpl)
 	fmt.Println(personDao.GetPersonCount())
-
+	_, err := personDao.AddTest()
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	// 	fmt.Println(id)
 	// p := &PersonDaoImpl{}
 	// mtV := reflect.ValueOf(p)
 	// fmt.Println(mtV.MethodByName("Table").Call(nil)[0])
